@@ -1,0 +1,20 @@
+---
+title: "tt_2021_03_16_games"
+author: "Dan Orlowitz"
+date: "3/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Packages
+```{r}
+library(tidytuesdayR,tidyverse)
+```
+# data load
+```{r}
+tuesdata <- tidytuesdayR::tt_load('2021-03-16')
+```
+# clean
