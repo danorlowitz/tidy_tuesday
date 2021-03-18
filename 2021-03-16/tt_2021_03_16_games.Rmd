@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r packages}
 library(tidytuesdayR)
 library(tidyverse)
+library(lubridate)
 ```
 
 # data load
@@ -24,10 +25,65 @@ games <- tuesdata$games
 ```
 
 # clean
+
 ```{r clean}
-sort_by_perc <- games %>%
-mutate(avg_peak_perc = as.numeric(gsub('\\%','',avg_peak_perc))) %>%
-  arrange(desc(avg_peak_perc))
-head(sort_by_perc)
-range(sort_by_perc$year,na.rm=TRUE)
+# this segment lifted nearly entirely from Xin Yuen, @so_xinteresting
+fm_cleaned <- games %>%
+  filter(str_detect(gamename, "Football Manager")) %>%
+  mutate(avg_peak_perc = as.numeric(gsub('\\%','',avg_peak_perc))) %>%
+ unite("month_year", month:year, sep = " ", remove = F) %>%
+  mutate(month_year = my(month_year)) %>% 
+  group_by(gamename) %>% 
+  arrange(month_year) %>% 
+  mutate(
+    months_out = row_number() - 1,
+    release = min(month_year),
+    release_label = str_glue("Released {format(release, '%b %Y')}")) %>% 
+  filter(months_out <= 36) %>% 
+  arrange(release) %>% 
+  mutate(
+    gamename = factor(gamename, levels = unique(.$gamename)),
+    end = max(month_year)) %>% 
+  ungroup()
+print(fm_cleaned)
+```
+# fix 2014 data
+```{r fix2014}
+# FM2014 data appears to have "started" a few months before the game was actually released, so goal here is to erase the "extra" months for consistency"
+
+```
+
+# visualization 1
+
+```{r visualization}
+#chart of average users
+fm_cleaned %>% filter(months_out <= 36 & !grepl("Touch",gamename)) %>% 
+  ggplot(aes(x = months_out, y = avg, group = gamename,))+
+  theme(
+    panel.background = element_rect(fill = "palegreen4", color = "palegreen4"),
+    line = element_line(color = aes(), size = 0.5, linetype = 3)
+    )+
+  geom_line(aes(y = avg,color=gamename))+
+  labs(title = "Average Steam userbase for Football Manager", subtitle = "(Except for 2013 and 2019 whose data wasn't included)")+
+  xlab("Months after release")+
+  ylab("Average users")
+
+ggsave("tt_2021_03_16_games.png")
+```
+
+# visualization 2
+
+```{r visualization 2}
+#chart of average user % vs. peak
+fm_cleaned %>% filter(months_out <= 36 & !grepl("Touch",gamename)) %>% 
+  ggplot(aes(x = months_out, y = avg_peak_perc, group = gamename))+
+  theme(
+    panel.background = element_rect(fill = "palegreen4", color = "palegreen4"),
+    line = element_line(color = aes(), size = 0.5, linetype = 3)
+    )+
+  geom_line(aes(y = avg_peak_perc,color=gamename))+
+  labs(title = "Average Steam userbase for Football Manager", subtitle = "(Except for 2013 and 2019 whose data wasn't included)")+
+  xlab("Months after release")+
+  ylab("% of users compared to peak")
+ggsave("tt_2021_03_16_games_2.png")
 ```
