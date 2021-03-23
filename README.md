@@ -4,6 +4,8 @@ Attempting to document my tidytuesday efforts.
 
 ### Intended goals
 
+2021.03.23 - ???
+
 2021.03.16 - show games w/ most consistent userbases
 
 CHANGELOG
